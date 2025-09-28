@@ -1,0 +1,35 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import connectDb from './db/connectDb.js';
+import userRoute from './Routes/userRoute.js';
+import adminRoute from './Routes/adminRoutes.js';
+import productRoute from './Routes/productRoutes.js';
+import orderRoute from './Routes/orderRoutes.js';
+import path from 'path';
+
+
+dotenv.config();
+const app=express();
+const PORT=process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+connectDb()
+
+app.use('/api/users',userRoute)
+app.use('/api/admins',adminRoute)
+app.use('/api/products',productRoute)
+app.use("/images",express.static("uploads"));
+// Serve uploads folder as static
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+app.use('/api/orders',orderRoute)
+
+app.get('/',(req,res)=>{
+    res.send('Welcome to the API');
+})
+
+app.listen(PORT,()=>{
+    console.log(`Server is running on port ${PORT}`);
+})
+
