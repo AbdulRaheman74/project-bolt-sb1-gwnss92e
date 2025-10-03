@@ -14,7 +14,8 @@ const app=express();
 const PORT=process.env.PORT || 3000;
 
 app.use(cors({
-    origin: 'http://localhost:5173', // React dev server
+    origin: 'https://project-bolt-sb1-gwnss92e.vercel.app',
+// React dev server
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true, // agar cookies / auth bhejna ho
   }));

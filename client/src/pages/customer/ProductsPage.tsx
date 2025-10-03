@@ -28,7 +28,7 @@ const ProductsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
 
   useEffect(() => {
-    const API_BASE = (import.meta as unknown as { env: Record<string, string | undefined> }).env?.REACT_APP_API_URL || 'http://localhost:6060/api';
+    const API_BASE = (import.meta as unknown as { env: Record<string, string | undefined> }).env?.REACT_APP_API_URL ;
     const fetchProducts = async (): Promise<void> => {
       try {
         dispatch(setLoading(true));
