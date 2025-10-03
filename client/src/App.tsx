@@ -14,6 +14,7 @@ import LoginPage from './pages/customer/LoginPage';
 import RegisterPage from './pages/customer/RegisterPage';
 import ForgotPasswordPage from './pages/customer/ForgotPasswordPage';
 import ProfilePage from './pages/customer/ProfilePage';
+import OrdersPage from './pages/customer/OrdersPage';
 
 // Admin Pages
 import AdminLogin from './pages/admin/AdminLogin';
@@ -69,6 +70,14 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="orders"
+          element={
+            <ProtectedRoute>
+              <OrdersPage />
             </ProtectedRoute>
           }
         />

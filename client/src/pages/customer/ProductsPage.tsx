@@ -1,12 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import { RootState } from '../../store';
-import { setProducts, setCategories, updateFilters, setSortBy } from '../../store/slices/productsSlice';
-import { mockProducts, mockCategories } from '../../data/mockData';
+import { setProducts, setCategories, updateFilters, setSortBy, setLoading, setError } from '../../store/slices/productsSlice';
 import ProductCard from '../../components/common/ProductCard';
 import { Filter, Grid2x2 as Grid, List, ChevronDown, Search } from 'lucide-react';
-import { Product } from '../../types';
+import { Product, Category } from '../../types';
+
+type BackendProduct = {
+  _id: string;
+  name: string;
+  description?: string;
+  price: number | string;
+  stock: number | string;
+  category?: string;
+  image?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 const ProductsPage: React.FC = () => {
   const dispatch = useDispatch();
@@ -17,12 +28,66 @@ const ProductsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
 
   useEffect(() => {
-    // TODO: Replace with actual API calls
-    // fetch('/api/products').then(res => res.json()).then(data => dispatch(setProducts(data)));
-    // fetch('/api/categories').then(res => res.json()).then(data => dispatch(setCategories(data)));
-    
-    dispatch(setProducts(mockProducts));
-    dispatch(setCategories(mockCategories));
+    const API_BASE = (import.meta as unknown as { env: Record<string, string | undefined> }).env?.REACT_APP_API_URL || 'http://localhost:6060/api';
+    const fetchProducts = async (): Promise<void> => {
+      try {
+        dispatch(setLoading(true));
+        const res: Response = await fetch(`${API_BASE}/products`);
+        const data: unknown = await res.json();
+        if (!res.ok) {
+          const msg = (data && typeof data === 'object' && 'message' in data) ? (data as { message?: string }).message : undefined;
+          throw new Error(msg || 'Failed to load products');
+        }
+
+        // Map backend product to UI Product type
+        const SERVER_ORIGIN = API_BASE.replace(/\/(api|API)$/,'');
+        const mapped: Product[] = (data as BackendProduct[]).map((p) => ({
+          id: String(p._id),
+          name: p.name,
+          description: p.description || '',
+          price: Number(p.price) || 0,
+          originalPrice: undefined,
+          images: p.image
+            ? [`${SERVER_ORIGIN}${String(p.image).startsWith('/') ? '' : '/'}${String(p.image)}`]
+            : [],
+          category: p.category || 'uncategorized',
+          subcategory: undefined,
+          rating: 4.2,
+          reviewCount: 0,
+          inStock: (Number(p.stock) || 0) > 0,
+          stockQuantity: Number(p.stock) || 0,
+          tags: [],
+          brand: '',
+          createdAt: p.createdAt || new Date().toISOString(),
+          updatedAt: p.updatedAt || new Date().toISOString(),
+        }));
+
+        dispatch(setProducts(mapped));
+
+        // Derive categories from products
+        const catSet = Array.from(new Set(mapped.map((m) => m.category).filter(Boolean)));
+        const derivedCategories: Category[] = catSet.map((c) => ({
+          id: String(c),
+          name: String(c),
+          slug: String(c),
+          image: '',
+          subcategories: [],
+        }));
+        dispatch(setCategories(derivedCategories));
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Failed to load products';
+        dispatch(setError(message));
+      } finally {
+        dispatch(setLoading(false));
+      }
+    };
+
+    fetchProducts();
+
+    // Listen for refresh events from admin create
+    const onRefresh = () => fetchProducts();
+    window.addEventListener('products:refresh', onRefresh);
+    return () => window.removeEventListener('products:refresh', onRefresh);
   }, [dispatch]);
 
   useEffect(() => {
@@ -38,13 +103,13 @@ const ProductsPage: React.FC = () => {
     }
   }, [searchParams, dispatch]);
 
-  const handleFilterChange = (key: string, value: any) => {
+  const handleFilterChange = (key: keyof typeof filters, value: string | number | boolean | string[] | [number, number]) => {
     dispatch(updateFilters({ [key]: value }));
     
     // Update URL params
     const newSearchParams = new URLSearchParams(searchParams);
     if (key === 'category' && value) {
-      newSearchParams.set('category', value);
+      newSearchParams.set('category', String(value));
     } else if (key === 'category' && !value) {
       newSearchParams.delete('category');
     }
@@ -66,8 +131,8 @@ const ProductsPage: React.FC = () => {
     setSearchParams(newSearchParams);
   };
 
-  // Filter and sort products
-  const filteredProducts = products
+  // Fast memoized filtering and sorting
+  const filteredProducts = useMemo(() => products
     .filter((product: Product) => {
       if (filters.category && product.category !== filters.category) return false;
       if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
@@ -86,7 +151,9 @@ const ProductsPage: React.FC = () => {
         case 'newest': return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         default: return a.name.localeCompare(b.name);
       }
-    });
+    }), [products, filters, sortBy, searchQuery]);
+
+  const isLoading = useSelector((state: RootState) => state.products.loading);
 
   const availableBrands = [...new Set(products.map(p => p.brand))];
 
@@ -122,6 +189,25 @@ const ProductsPage: React.FC = () => {
                 <span>Filters</span>
               </button>
               
+              {/* Category Tabs */}
+              <div className="hidden md:flex items-center space-x-2 overflow-x-auto">
+                <button
+                  onClick={() => handleFilterChange('category', '')}
+                  className={`px-3 py-1.5 rounded-full text-sm border ${!filters.category ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                >
+                  All
+                </button>
+                {categories.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => handleFilterChange('category', c.slug)}
+                    className={`px-3 py-1.5 rounded-full text-sm border ${filters.category === c.slug ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => setViewMode('grid')}
@@ -290,7 +376,17 @@ const ProductsPage: React.FC = () => {
 
           {/* Products Grid */}
           <div className="lg:col-span-3 mt-6 lg:mt-0">
-            {filteredProducts.length === 0 ? (
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="bg-white rounded-lg shadow p-4 animate-pulse">
+                    <div className="h-40 bg-gray-200 rounded mb-4" />
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : filteredProducts.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-500 text-lg">No products found matching your criteria.</p>
               </div>

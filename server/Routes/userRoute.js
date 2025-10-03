@@ -11,3 +11,5 @@ userRoute.get('/profile',protect,getUserProfile)
 // userRoute.put('/profile',protect,updateUserProfile)
 
 export default userRoute;
+// https://e-comm-backend-server.onrender.com/api/users/profile
+

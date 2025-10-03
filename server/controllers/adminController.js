@@ -1,5 +1,7 @@
 // server/controllers/adminController.js
 import User from "../models/userModel.js";
+import Order from "../models/orderModel.js";
+import Product from "../models/productModel.js";
 import jwt from "jsonwebtoken";
 
 // Helper: generate token
@@ -93,6 +95,70 @@ export const getAdminProfile = async (req, res) => {
     }
   } catch (error) {
     console.error("getAdminProfile error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get All Users (Admin only)
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}).select("-password").sort({ createdAt: -1 });
+    res.json(users);
+  } catch (error) {
+    console.error("getAllUsers error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get All Orders (Admin only)
+export const getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({})
+      .populate("user", "name email")
+      .populate("items.product", "name price image")
+      .sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (error) {
+    console.error("getAllOrders error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get Admin Dashboard Statistics
+export const getDashboardStats = async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments({ role: { $ne: "admin" } });
+    const totalAdmins = await User.countDocuments({ role: "admin" });
+    const totalOrders = await Order.countDocuments({});
+    const totalProducts = await Product.countDocuments({});
+    
+    const totalRevenue = await Order.aggregate([
+      { $group: { _id: null, total: { $sum: "$totalPrice" } } }
+    ]);
+    
+    const pendingOrders = await Order.countDocuments({ status: "pending" });
+    const shippedOrders = await Order.countDocuments({ status: "shipped" });
+    const deliveredOrders = await Order.countDocuments({ status: "delivered" });
+    
+    const recentOrders = await Order.find({})
+      .populate("user", "name email")
+      .populate("items.product", "name price")
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    res.json({
+      totalUsers,
+      totalAdmins,
+      totalOrders,
+      totalProducts,
+      totalRevenue: totalRevenue[0]?.total || 0,
+      pendingOrders,
+      shippedOrders,
+      deliveredOrders,
+      recentOrders,
+    });
+  } catch (error) {
+    console.error("getDashboardStats error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

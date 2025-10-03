@@ -48,7 +48,7 @@ const Header: React.FC = () => {
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       {/* Top Bar */}
-      <div className="bg-blue-600 text-white text-sm py-2">
+      {/* <div className="bg-blue-600 text-white text-sm py-2">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <span>Free shipping on orders over $75</span>
           <div className="hidden sm:flex space-x-4">
@@ -60,7 +60,7 @@ const Header: React.FC = () => {
             </Link>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Main Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -195,7 +195,7 @@ const Header: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder="Search produc..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"

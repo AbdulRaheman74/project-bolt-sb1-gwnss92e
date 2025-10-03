@@ -41,7 +41,18 @@ const RegisterPage: React.FC = () => {
       return;
     }
 
-    await register(formData);
+    // ✅ Backend ke hisaab se name field
+    const payload = {
+      name: `${formData.firstName} ${formData.lastName}`,
+      email: formData.email,
+      password: formData.password,
+    };
+
+    const result = await register(payload);
+
+    if (result?.success) {
+      navigate('/login', { replace: true });
+    }
   };
 
   return (

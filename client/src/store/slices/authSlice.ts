@@ -1,9 +1,8 @@
-// Authentication state management
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AuthState, User } from '../../types';
 
 const initialState: AuthState = {
-  user: null,
+  user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null,
   token: localStorage.getItem('token'),
   isLoading: false,
   error: null,
@@ -23,6 +22,7 @@ const authSlice = createSlice({
       state.token = action.payload.token;
       state.error = null;
       localStorage.setItem('token', action.payload.token);
+      localStorage.setItem('user', JSON.stringify(action.payload.user));
     },
     loginFailure: (state, action: PayloadAction<string>) => {
       state.isLoading = false;
@@ -35,10 +35,12 @@ const authSlice = createSlice({
       state.token = null;
       state.error = null;
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
     },
     updateProfile: (state, action: PayloadAction<Partial<User>>) => {
       if (state.user) {
         state.user = { ...state.user, ...action.payload };
+        localStorage.setItem('user', JSON.stringify(state.user));
       }
     },
     clearError: (state) => {

@@ -47,14 +47,14 @@ const LoginPage: React.FC = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           {/* Demo Credentials */}
-          <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+          {/* <div className="mb-6 p-4 bg-blue-50 rounded-lg">
             <h3 className="text-sm font-medium text-blue-800 mb-2">Demo Credentials:</h3>
             <div className="text-sm text-blue-700 space-y-1">
               <p>Email: admin@ecommerce.com (Admin)</p>
               <p>Email: john.doe@email.com (Customer)</p>
               <p>Password: password123</p>
             </div>
-          </div>
+          </div> */}
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (

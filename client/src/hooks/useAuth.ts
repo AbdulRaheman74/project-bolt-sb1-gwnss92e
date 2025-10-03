@@ -1,62 +1,67 @@
-// Custom hook for authentication
+// hooks/useAuth.ts
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
 import { loginStart, loginSuccess, loginFailure, logout } from '../store/slices/authSlice';
-import { mockUsers } from '../data/mockData';
 
 export const useAuth = () => {
   const dispatch = useDispatch();
   const { user, token, isLoading, error } = useSelector((state: RootState) => state.auth);
 
+  // Login function for both user & admin
   const login = async (email: string, password: string) => {
     dispatch(loginStart());
     
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/auth/login', { ... });
-      
-      // Mock authentication logic
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockUser = mockUsers.find(u => u.email === email);
-      if (mockUser && password === 'password123') {
-        const token = `mock-token-${mockUser.id}`;
-        dispatch(loginSuccess({ user: mockUser, token }));
-        return { success: true };
-      } else {
-        dispatch(loginFailure('Invalid email or password'));
-        return { success: false, error: 'Invalid email or password' };
-      }
-    } catch (err) {
+      // Decide API endpoint based on email (or any logic)
+      const endpoint = email.includes('admin')
+        ? 'https://e-comm-backend-server.onrender.com/api/admins/login'
+        : 'https://e-comm-backend-server.onrender.com/api/users/login';
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.message || 'Login failed');
+
+      // Dispatch success with returned user/admin object
+      dispatch(loginSuccess({
+        user: data.admin || data.user, // admin or user object
+        token: data.token,
+      }));
+
+      return { success: true };
+    } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed';
       dispatch(loginFailure(errorMessage));
       return { success: false, error: errorMessage };
     }
   };
 
+  // Register function (users only, admin registration via backend separately)
   const register = async (userData: any) => {
     dispatch(loginStart());
-    
+
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/auth/register', { ... });
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newUser = {
-        id: Date.now().toString(),
-        email: userData.email,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        isAdmin: false,
-        isBlocked: false,
-        createdAt: new Date().toISOString(),
-      };
-      
-      const token = `mock-token-${newUser.id}`;
-      dispatch(loginSuccess({ user: newUser, token }));
+      const response = await fetch(
+        'https://e-comm-backend-server.onrender.com/api/users/register',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userData),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.message || 'Registration failed');
+
+      // Do NOT auto-login after registration; require explicit login
       return { success: true };
-    } catch (err) {
+    } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Registration failed';
       dispatch(loginFailure(errorMessage));
       return { success: false, error: errorMessage };
@@ -76,6 +81,6 @@ export const useAuth = () => {
     register,
     logout: logoutUser,
     isAuthenticated: !!user,
-    isAdmin: user?.isAdmin || false,
+    isAdmin: user?.role === 'admin' || false, 
   };
 };

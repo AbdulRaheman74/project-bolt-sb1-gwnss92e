@@ -33,12 +33,22 @@ export const createProduct = async (req, res) => {
 // Get All Products (Public)
 export const getAllProducts = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = "" } = req.query;
-    const query = { name: { $regex: search, $options: "i" } };
+    const { page = 1, limit = 24, search = "", category = "" } = req.query;
+    const filters = {};
+    if (search) {
+      filters.name = { $regex: search, $options: "i" };
+    }
+    if (category) {
+      filters.category = category;
+    }
 
-    const products = await Product.find(query)
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
+    const numericLimit = Number(limit) || 24;
+    const numericPage = Number(page) || 1;
+
+    const products = await Product.find(filters)
+      .sort({ createdAt: -1 })
+      .skip((numericPage - 1) * numericLimit)
+      .limit(numericLimit);
 
     res.json(products);
   } catch (error) {
@@ -88,7 +98,7 @@ export const deleteProduct = async (req, res) => {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: "Product not found" });
 
-    await product.remove();
+    await Product.findByIdAndDelete(req.params.id);
     res.json({ message: "Product deleted" });
   } catch (error) {
     console.error(error);
