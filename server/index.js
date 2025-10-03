@@ -13,11 +13,26 @@ dotenv.config();
 const app=express();
 const PORT=process.env.PORT || 3000;
 
+
+
+const allowedOrigins = [
+  'http://localhost:5173', // local frontend
+  'https://project-bolt-sb1-gwnss92e-ma08opnw7-abdulraheman74s-projects.vercel.app' // Vercel frontend
+];
+
 app.use(cors({
-    origin: ['http://localhost:5173', 'https://project-bolt-sb1-gwnss92e-ma08opnw7-abdulraheman74s-projects.vercel.app'],
-    methods: ['GET','POST','PUT','DELETE'],
-    credentials: true,
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true); // Postman / direct server requests
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
 }));
+
 app.use(express.json());
 connectDb()
 
