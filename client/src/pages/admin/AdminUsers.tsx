@@ -15,7 +15,7 @@ interface UserData {
 
 const AdminUsers: React.FC = () => {
   const { token, isAdmin, isAuthenticated } = useAuth();
-  const API_BASE = (import.meta as unknown as { env: Record<string, string | undefined> }).env?.REACT_APP_API_URL || 'http://localhost:6060/api';
+  const API_BASE = (import.meta as unknown as { env: Record<string, string | undefined> }).env?.VITE_API_URL || 'https://e-comm-backend-server.onrender.com/api';
 
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);

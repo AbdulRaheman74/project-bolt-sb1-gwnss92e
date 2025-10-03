@@ -24,7 +24,7 @@ const ProductDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [product, setProduct] = useState<Product | null>(null);
 
-  const API_BASE = (import.meta as unknown as { env: Record<string, string | undefined> }).env?.REACT_APP_API_URL || 'http://localhost:6060/api';
+  const API_BASE = (import.meta as unknown as { env: Record<string, string | undefined> }).env?.VITE_API_URL || 'https://e-comm-backend-server.onrender.com/api';
   const SERVER_ORIGIN = API_BASE.replace(/\/(api|API)$/, '');
 
   useEffect(() => {
