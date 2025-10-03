@@ -14,10 +14,10 @@ const app=express();
 const PORT=process.env.PORT || 3000;
 
 app.use(cors({
-    origin: 'http://localhost:5173', // React dev server
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true, // agar cookies / auth bhejna ho
-  }));
+    origin: ['http://localhost:5173', 'https://project-bolt-sb1-gwnss92e-ma08opnw7-abdulraheman74s-projects.vercel.app'],
+    methods: ['GET','POST','PUT','DELETE'],
+    credentials: true,
+}));
 app.use(express.json());
 connectDb()
 
