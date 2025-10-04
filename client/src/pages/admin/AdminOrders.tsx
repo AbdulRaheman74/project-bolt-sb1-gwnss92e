@@ -1,7 +1,7 @@
 // AdminOrders component
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { Package, User, Calendar, DollarSign, MapPin, CreditCard, Eye } from 'lucide-react';
+import { Package, User, MapPin, CreditCard } from 'lucide-react';
 
 interface OrderItem {
   product: {
@@ -9,7 +9,7 @@ interface OrderItem {
     name: string;
     price: number;
     image: string;
-  };
+  } | null;
   qty: number;
 }
 
@@ -228,18 +228,18 @@ const API_BASE = window.location.hostname === 'localhost'
                       <div key={index} className="flex items-center space-x-3">
                         <img
                           className="h-12 w-12 rounded object-cover"
-                          src={`${API_BASE.replace('/api', '')}${item.product.image}`}
-                          alt={item.product.name}
+                          src={item.product?.image ? `${API_BASE.replace('/api', '')}${item.product.image}` : '/placeholder-image.jpg'}
+                          alt={item.product?.name || 'Product'}
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = '/placeholder-image.jpg';
                           }}
                         />
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">{item.product.name}</p>
-                          <p className="text-sm text-gray-600">Qty: {item.qty} × ${item.product.price.toFixed(2)}</p>
+                          <p className="text-sm font-medium text-gray-900">{item.product?.name || 'Unknown Product'}</p>
+                          <p className="text-sm text-gray-600">Qty: {item.qty} × ${item.product?.price?.toFixed(2) || '0.00'}</p>
                         </div>
                         <p className="text-sm font-medium text-gray-900">
-                          ${(item.product.price * item.qty).toFixed(2)}
+                          ${((item.product?.price || 0) * item.qty).toFixed(2)}
                         </p>
                       </div>
                     ))}
