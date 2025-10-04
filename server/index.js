@@ -13,12 +13,30 @@ dotenv.config();
 const app=express();
 const PORT=process.env.PORT || 3000;
 
-app.use(cors({
-    origin: 'https://project-bolt-sb1-gwnss92e.vercel.app',
-// React dev server
+
+
+const allowedOrigins = [
+    'http://localhost:5173', // local frontend
+    'https://project-bolt-sb1-gwnss92e.vercel.app', // main production domain
+    'https://project-bolt-sb1-gwnss92e-git-w-4470e0-abdulraheman74s-projects.vercel.app', // branch deployment
+    'https://project-bolt-sb1-gwnss92e-ma08opnw7-abdulraheman74s-projects.vercel.app' // previous branch or other preview
+  ];
+  
+  app.use(cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // Postman or server-to-server requests
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("❌ Blocked by CORS:", origin);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true, // agar cookies / auth bhejna ho
+    credentials: true
   }));
+  
+
 app.use(express.json());
 connectDb()
 
