@@ -28,7 +28,12 @@ const ProductsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
 
   useEffect(() => {
-    const API_BASE = (import.meta as unknown as { env: Record<string, string | undefined> }).env?.VITE_API_URL || 'https://e-comm-backend-server.onrender.com/api';
+    // Automatically switch between local and deployed backend
+const API_BASE = window.location.hostname === 'localhost'
+? 'http://localhost:6060/api'  // Local development
+: 'https://e-comm-backend-server.onrender.com/api'; // Production / deployed
+
+    console.log('API_BASE:', API_BASE);
     const fetchProducts = async (): Promise<void> => {
       try {
         dispatch(setLoading(true));
